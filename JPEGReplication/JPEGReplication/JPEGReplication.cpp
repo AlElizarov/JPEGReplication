@@ -1,20 +1,7 @@
 #include <iostream>
+#include "JPEGReplication.h"
 
-extern "C" {
-#include <jpeglib.h>
-}
-#include <setjmp.h>
-
-struct Image
-{
-    JSAMPLE * image_buffer;
-    int image_height;
-    int image_width;
-} image;
-
-int read_JPEG_file(char * filename);
-void my_error_exit(j_common_ptr cinfo);
-int write_JPEG_file(char * filename, int quality);
+Image image;
 
 int main(int argc, char **argv)
 {
@@ -45,14 +32,6 @@ int main(int argc, char **argv)
     std::cin.get();
     return 0;
 }
-
-struct my_error_mgr {
-    struct jpeg_error_mgr pub;
-
-    jmp_buf setjmp_buffer;
-};
-
-typedef struct my_error_mgr * my_error_ptr;
 
 int write_JPEG_file(char * filename, int quality)
 {
