@@ -5,9 +5,12 @@ extern "C" {
 }
 #include <setjmp.h>
 
-JSAMPLE * image_buffer;
-int image_height;
-int image_width;
+struct Image
+{
+    JSAMPLE * image_buffer;
+    int image_height;
+    int image_width;
+} image;
 
 int read_JPEG_file(char * filename);
 void my_error_exit(j_common_ptr cinfo);
@@ -66,8 +69,8 @@ int write_JPEG_file(char * filename, int quality)
         return 1;
     jpeg_stdio_dest(&cinfo, outfile);
 
-    cinfo.image_width = image_width;
-    cinfo.image_height = image_height;
+    cinfo.image_width = image.image_width;
+    cinfo.image_height = image.image_height;
     cinfo.input_components = 3;
     cinfo.in_color_space = JCS_RGB;
     jpeg_set_defaults(&cinfo);
@@ -75,10 +78,10 @@ int write_JPEG_file(char * filename, int quality)
     jpeg_set_quality(&cinfo, quality, TRUE);
 
     jpeg_start_compress(&cinfo, TRUE);
-    row_stride = image_width * 3;
+    row_stride = image.image_width * 3;
 
     while (cinfo.next_scanline < cinfo.image_height) {
-        row_pointer[0] = &image_buffer[cinfo.next_scanline * row_stride];
+        row_pointer[0] = &image.image_buffer[cinfo.next_scanline * row_stride];
         (void)jpeg_write_scanlines(&cinfo, row_pointer, 1);
     }
 
@@ -115,16 +118,16 @@ int read_JPEG_file(char * filename)
     buffer = (*cinfo.mem->alloc_sarray)
         ((j_common_ptr)&cinfo, JPOOL_IMAGE, row_stride, 1);
 
-    image_buffer = new unsigned char[cinfo.output_width * cinfo.output_height * cinfo.output_components];
+    image.image_buffer = new unsigned char[cinfo.output_width * cinfo.output_height * cinfo.output_components];
     int counter = 0;
     while (cinfo.output_scanline < cinfo.output_height) {
         (void)jpeg_read_scanlines(&cinfo, buffer, 1);
-        memcpy(image_buffer + counter, buffer[0], row_stride);
+        memcpy(image.image_buffer + counter, buffer[0], row_stride);
         counter += row_stride;
     }
 
-    image_height = cinfo.output_height;
-    image_width = cinfo.output_width;
+    image.image_height = cinfo.output_height;
+    image.image_width = cinfo.output_width;
 
     (void)jpeg_finish_decompress(&cinfo);
     jpeg_destroy_decompress(&cinfo);
