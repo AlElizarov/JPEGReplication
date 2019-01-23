@@ -11,13 +11,35 @@ int image_width;
 
 int read_JPEG_file(char * filename);
 void my_error_exit(j_common_ptr cinfo);
-void write_JPEG_file(char * filename, int quality);
+int write_JPEG_file(char * filename, int quality);
 
-int main()
+int main(int argc, char **argv)
 {
-    read_JPEG_file("..\\jpeg-6b\\testimg.jpg");
-    write_JPEG_file("D:\\img\\test.jpg", 70);
+    std::cout << "Program for working with JPEG images" << std::endl << std::endl;
+    std::cout << "------------------------------------" << std::endl;
+    std::cout << "------------------------------------" << std::endl;
+    if (argc != 3)
+    {
+        std::cout << "Incorrect number of argumnets!" << std::endl;
+        std::cin.get();
+        return 0;
+    }
     
+    if (read_JPEG_file(argv[1]))
+    {
+        std::cout << "Error reading " << argv[0] << " file!" << std::endl;
+        std::cin.get();
+        return 0;
+    }
+    if (write_JPEG_file(argv[2], 70))
+    {
+        std::cout << "Error writing " << argv[1] << " file!" << std::endl;
+        std::cin.get();
+        return 0;
+    }
+
+    std::cout << "Program completed successfully! Image was replecated from " << argv[1] << " to " << argv[2] <<std::endl;
+    std::cin.get();
     return 0;
 }
 
@@ -29,7 +51,7 @@ struct my_error_mgr {
 
 typedef struct my_error_mgr * my_error_ptr;
 
-void write_JPEG_file(char * filename, int quality)
+int write_JPEG_file(char * filename, int quality)
 {
     struct jpeg_compress_struct cinfo;
     struct jpeg_error_mgr jerr;
@@ -40,10 +62,8 @@ void write_JPEG_file(char * filename, int quality)
     cinfo.err = jpeg_std_error(&jerr);
     jpeg_create_compress(&cinfo);
 
-    if ((outfile = fopen(filename, "wb")) == NULL) {
-        fprintf(stderr, "can't open %s\n", filename);
-        exit(1);
-    }
+    if ((outfile = fopen(filename, "wb")) == NULL) 
+        return 1;
     jpeg_stdio_dest(&cinfo, outfile);
 
     cinfo.image_width = image_width;
@@ -65,6 +85,7 @@ void write_JPEG_file(char * filename, int quality)
     jpeg_finish_compress(&cinfo);
     fclose(outfile);
     jpeg_destroy_compress(&cinfo);
+    return 0;
 }
 
 int read_JPEG_file(char * filename)
@@ -75,17 +96,15 @@ int read_JPEG_file(char * filename)
     JSAMPARRAY buffer;
     int row_stride;
 
-    if ((infile = fopen(filename, "rb")) == NULL) {
-        fprintf(stderr, "can't open %s\n", filename);
-        return 0;
-    }
+    if ((infile = fopen(filename, "rb")) == NULL) 
+        return 1;
 
     cinfo.err = jpeg_std_error(&jerr.pub);
     jerr.pub.error_exit = my_error_exit;
     if (setjmp(jerr.setjmp_buffer)) {
         jpeg_destroy_decompress(&cinfo);
         fclose(infile);
-        return 0;
+        return 1;
     }
     jpeg_create_decompress(&cinfo);
 
@@ -111,7 +130,7 @@ int read_JPEG_file(char * filename)
     jpeg_destroy_decompress(&cinfo);
     fclose(infile);
 
-    return 1;
+    return 0;
 }
 
 void my_error_exit(j_common_ptr cinfo)
