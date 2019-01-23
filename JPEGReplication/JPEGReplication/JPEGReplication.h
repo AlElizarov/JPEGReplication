@@ -8,9 +8,9 @@ extern "C" {
 
 struct Image
 {
-    JSAMPLE * image_buffer;
-    int image_height;
-    int image_width;
+    JSAMPLE * image_buffer; /* Points to large array of R,G,B-order data */
+    int image_height; /* Number of rows in image */
+    int image_width; /* Number of columns in image */
 };
 
 struct my_error_mgr {
